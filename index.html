@@ -30,4 +30,161 @@
         <p>Select a category, pick a template, add text, and download! Fully offline after first load.</p>
         
         <div class="tabs">
-            <div class="tab active" onclick="switchCategory('classics')">
+            <div class="tab active" onclick="switchCategory('classics')">Classics</div>
+            <div class="tab" onclick="switchCategory('reactions')">Reactions</div>
+            <div class="tab" onclick="switchCategory('comparisons')">Comparisons</div>
+            <div class="tab" onclick="switchCategory('wholesome')">Wholesome</div>
+            <div class="tab" onclick="switchCategory('gaming')">Gaming</div>
+        </div>
+        
+        <div id="templates" class="templates"></div>
+        
+        <input type="text" id="topText" placeholder="Top Text (optional)" maxlength="50">
+        <input type="text" id="bottomText" placeholder="Bottom Text (optional)" maxlength="50">
+        
+        <canvas id="canvas" width="500" height="500"></canvas>
+        
+        <br>
+        <button onclick="drawMeme()">Update Preview</button>
+        <button onclick="downloadMeme()">Download Meme</button>
+    </div>
+
+    <script>
+        const categories = {
+            classics: [
+                { name: "Drake Hotline Bling", url: "https://i.imgflip.com/30b1gx.jpg" },
+                { name: "Distracted Boyfriend", url: "https://i.imgflip.com/1ur9b0.jpg" },
+                { name: "Change My Mind", url: "https://i.imgflip.com/24y43o.jpg" },
+                { name: "Success Kid", url: "https://i.imgflip.com/1bhk.jpg" },
+                { name: "One Does Not Simply", url: "https://i.imgflip.com/1bij.jpg" },
+                { name: "This Is Fine Dog", url: "https://i.imgflip.com/1g8my4.jpg" },
+                { name: "Mocking SpongeBob", url: "https://i.imgflip.com/1otk96.jpg" },
+                { name: "Woman Yelling at Cat", url: "https://i.imgflip.com/345vnv.jpg" },
+                { name: "Ancient Aliens Guy", url: "https://i.imgflip.com/26jxvz.jpg" },
+                { name: "Roll Safe", url: "https://i.imgflip.com/1h7wh.jpg" },
+                { name: "Gru's Plan", url: "https://i.imgflip.com/3oevdk.jpg" },
+                { name: "Batman Slapping Robin", url: "https://i.imgflip.com/9eh6.jpg" }
+            ],
+            reactions: [
+                { name: "Surprised Pikachu", url: "https://i.imgflip.com/2kbn1e.jpg" },
+                { name: "Angry Pakistani Fan", url: "https://i.imgflip.com/4hr1af.jpg" },
+                { name: "Confused Nick Young", url: "https://i.imgflip.com/26t9w0.jpg" },
+                { name: "Laughing Leonardo", url: "https://i.imgflip.com/39qi0b.jpg" },
+                { name: "Crying Michael Jordan", url: "https://i.imgflip.com/2fm6x.jpg" },
+                { name: "Winking Guy", url: "https://i.imgflip.com/3fm6x.jpg" },
+                { name: "Shocked Black Guy", url: "https://i.imgflip.com/3bqp2.jpg" },
+                { name: "Disappointed Black Guy", url: "https://i.imgflip.com/1g2r1.jpg" },
+                { name: "Unsettled Tom", url: "https://i.imgflip.com/3lmzyx.jpg" },
+                { name: "Homer Bush Hiding", url: "https://i.imgflip.com/1h7wh.jpg" }
+            ],
+            comparisons: [
+                { name: "Expanding Brain", url: "https://i.imgflip.com/1jwhkz.jpg" },
+                { name: "Drake Hotline", url: "https://i.imgflip.com/30b1gx.jpg" },
+                { name: "Distracted Boyfriend", url: "https://i.imgflip.com/1ur9b0.jpg" },
+                { name: "Who Would Win?", url: "https://i.imgflip.com/1ooojc.jpg" },
+                { name: "Left Exit 12 Off Ramp", url: "https://i.imgflip.com/22bdq6.jpg" },
+                { name: "Epic Handshake", url: "https://i.imgflip.com/28j0te.jpg" },
+                { name: "Sleeping Shaq", url: "https://i.imgflip.com/1nck.jpg" },
+                { name: "Tuxedo Winnie the Pooh", url: "https://i.imgflip.com/2ybua0.jpg" },
+                { name: "Increasingly Buff SpongeBob", url: "https://i.imgflip.com/4t0m5.jpg" }
+            ],
+            wholesome: [
+                { name: "Wholesome Success Dog", url: "https://i.imgflip.com/2z1q2.jpg" },
+                { name: "Positive Cat", url: "https://i.imgflip.com/4t0m5.jpg" },
+                { name: "You Got This Dog", url: "https://i.imgflip.com/2zhx.jpg" },
+                { name: "Cute Seal Approval", url: "https://i.imgflip.com/4hr1a.jpg" },
+                { name: "Happy Otter", url: "https://i.imgflip.com/5zq0w.jpg" }
+            ],
+            gaming: [
+                { name: "Sweaty Tryhard", url: "https://i.imgflip.com/4hr1af.jpg" },
+                { name: "Gamer Rage", url: "https://i.imgflip.com/1g2r1.jpg" },
+                { name: "Press F to Pay Respects", url: "https://i.imgflip.com/1jwhk.jpg" },
+                { name: "It's Free Real Estate", url: "https://i.imgflip.com/2dta5.jpg" },
+                { name: "To Be Continued", url: "https://i.imgflip.com/2z1q2.jpg" }
+            ]
+        };
+
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let currentImg = new Image();
+
+        function loadCategory(cat) {
+            const templatesDiv = document.getElementById('templates');
+            templatesDiv.innerHTML = '';
+            categories[cat].forEach(temp => {
+                const wrapper = document.createElement('div');
+                wrapper.classList.add('template-wrapper');
+                const img = document.createElement('img');
+                img.src = temp.url;
+                img.alt = temp.name;
+                img.classList.add('template-img');
+                img.onclick = () => selectTemplate(temp.url, img);
+                const label = document.createElement('div');
+                label.textContent = temp.name;
+                label.classList.add('template-name');
+                wrapper.appendChild(img);
+                wrapper.appendChild(label);
+                templatesDiv.appendChild(wrapper);
+            });
+            if (categories[cat].length > 0) {
+                selectTemplate(categories[cat][0].url, templatesDiv.querySelector('.template-img'));
+            }
+        }
+
+        function switchCategory(cat) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            loadCategory(cat);
+        }
+
+        function selectTemplate(url, element) {
+            document.querySelectorAll('.template-img').forEach(i => i.classList.remove('selected'));
+            element.classList.add('selected');
+            currentImg.src = url;
+            currentImg.onload = drawMeme;
+        }
+
+        function drawMeme() {
+            if (!currentImg.complete) return;
+            canvas.width = currentImg.width;
+            canvas.height = currentImg.height;
+            ctx.drawImage(currentImg, 0, 0, canvas.width, canvas.height);
+
+            const fontSize = Math.min(60, canvas.width / 8);
+            ctx.font = `bold ${fontSize}px Impact`;
+            ctx.fillStyle = 'white';
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = fontSize / 10;
+            ctx.textAlign = 'center';
+
+            const top = document.getElementById('topText').value.toUpperCase();
+            const bottom = document.getElementById('bottomText').value.toUpperCase();
+
+            if (top) {
+                ctx.strokeText(top, canvas.width / 2, fontSize + 20);
+                ctx.fillText(top, canvas.width / 2, fontSize + 20);
+            }
+            if (bottom) {
+                ctx.strokeText(bottom, canvas.width / 2, canvas.height - 20);
+                ctx.fillText(bottom, canvas.width / 2, canvas.height - 20);
+            }
+        }
+
+        function downloadMeme() {
+            const link = document.createElement('a');
+            link.download = 'meme.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // Initial load
+        loadCategory('classics');
+        document.getElementById('topText').addEventListener('input', drawMeme);
+        document.getElementById('bottomText').addEventListener('input', drawMeme);
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+</body>
+</html>
