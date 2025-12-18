@@ -9,22 +9,37 @@
     <style>
         body { font-family: Arial, sans-serif; background: #121212; color: #fff; margin: 0; padding: 20px; text-align: center; }
         h1 { color: #ff4081; }
-        .container { max-width: 800px; margin: 0 auto; }
-        .templates { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 20px 0; }
-        .template-img { width: 150px; cursor: pointer; border: 3px solid #333; border-radius: 8px; transition: border 0.3s; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .tabs { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin: 20px 0; }
+        .tab { padding: 10px 20px; background: #333; border-radius: 8px; cursor: pointer; }
+        .tab.active { background: #ff4081; }
+        .templates { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+        .template-img { width: 100%; cursor: pointer; border: 3px solid #333; border-radius: 8px; transition: border 0.3s; }
         .template-img:hover, .template-img.selected { border-color: #ff4081; }
         #canvas { max-width: 100%; border: 2px solid #ff4081; border-radius: 8px; margin: 20px 0; background: #000; }
         input { padding: 10px; margin: 10px; width: 80%; max-width: 400px; font-size: 18px; border-radius: 8px; border: none; }
         button { padding: 15px 30px; font-size: 18px; background: #ff4081; color: white; border: none; border-radius: 8px; cursor: pointer; margin: 10px; }
         button:hover { background: #f50057; }
+        .category { display: none; }
+        .category.active { display: grid; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Meme Creator Studio 🎨</h1>
-        <p>Select a template, add text, and download your meme! Works offline.</p>
+        <p>Select a category, pick a template, add text, and download! Fully offline after first load.</p>
         
-        <div class="templates" id="templates"></div>
+        <div class="tabs">
+            <div class="tab active" onclick="switchCategory('classics')">Classics</div>
+            <div class="tab" onclick="switchCategory('reactions')">Reactions</div>
+            <div class="tab" onclick="switchCategory('comparisons')">Comparisons</div>
+            <div class="tab" onclick="switchCategory('wholesome')">Wholesome</div>
+            <div class="tab" onclick="switchCategory('gaming')">Gaming</div>
+        </div>
+        
+        <div id="templates" class="templates">
+            <!-- Templates loaded by JS -->
+        </div>
         
         <input type="text" id="topText" placeholder="Top Text (optional)" maxlength="50">
         <input type="text" id="bottomText" placeholder="Bottom Text (optional)" maxlength="50">
@@ -37,30 +52,88 @@
     </div>
 
     <script>
-        const templates = [
-            { name: "Drake Hotline Bling", url: "https://i.imgflip.com/30b1gx.jpg" }, // Popular ones from public sources
-            { name: "Distracted Boyfriend", url: "https://i.imgflip.com/1ur9b0.jpg" },
-            { name: "Change My Mind", url: "https://i.imgflip.com/24y43o.jpg" },
-            { name: "Expanding Brain", url: "https://i.imgflip.com/1jwhkz.jpg" },
-            { name: "Success Kid", url: "https://i.imgflip.com/1bhk.jpg" },
-            { name: "One Does Not Simply", url: "https://i.imgflip.com/1bij.jpg" }
-        ];
+        const categories = {
+            classics: [
+                { name: "Drake Hotline Bling", url: "https://i.imgflip.com/30b1gx.jpg" },
+                { name: "Distracted Boyfriend", url: "https://i.imgflip.com/1ur9b0.jpg" },
+                { name: "Change My Mind", url: "https://i.imgflip.com/24y43o.jpg" },
+                { name: "Success Kid", url: "https://i.imgflip.com/1bhk.jpg" },
+                { name: "One Does Not Simply", url: "https://i.imgflip.com/1bij.jpg" },
+                { name: "This Is Fine Dog", url: "https://i.imgflip.com/1g8my4.jpg" },
+                { name: "Mocking SpongeBob", url: "https://i.imgflip.com/1otk96.jpg" },
+                { name: "Woman Yelling at Cat", url: "https://i.imgflip.com/345vnv.jpg" },
+                { name: "Ancient Aliens Guy", url: "https://i.imgflip.com/26jxvz.jpg" },
+                { name: "Roll Safe", url: "https://i.imgflip.com/1h7wh.jpg" }
+            ],
+            reactions: [
+                { name: "Surprised Pikachu", url: "https://i.imgflip.com/2kbn1e.jpg" },
+                { name: "Angry Pakistani Fan", url: "https://i.imgflip.com/4hr1af.jpg" },
+                { name: "Confused Nick Young", url: "https://i.imgflip.com/26t9w0.jpg" },
+                { name: "Laughing Leonardo DiCaprio", url: "https://i.imgflip.com/3oevdk.jpg" },
+                { name: "Crying Michael Jordan", url: "https://i.imgflip.com/2fm6x.jpg" },
+                { name: "Blink Guy (Travis Scott)", url: "https://i.imgflip.com/3fm6x.jpg" },
+                { name: "Shocked Black Guy", url: "https://i.imgflip.com/3bqp2.jpg" },
+                { name: "Disappointed Black Guy", url: "https://i.imgflip.com/1g2r1.jpg" }
+            ],
+            comparisons: [
+                { name: "Expanding Brain", url: "https://i.imgflip.com/1jwhkz.jpg" },
+                { name: "Drake Hotline Bling (again)", url: "https://i.imgflip.com/30b1gx.jpg" },
+                { name: "Distracted Boyfriend (again)", url: "https://i.imgflip.com/1ur9b0.jpg" },
+                { name: "Who Would Win?", url: "https://i.imgflip.com/1ooojc.jpg" },
+                { name: "Left Exit 12 Off Ramp", url: "https://i.imgflip.com/2fm6x.jpg" },
+                { name: "Epic Handshake", url: "https://i.imgflip.com/28j0te.jpg" },
+                { name: "Sleeping Shaq", url: "https://i.imgflip.com/1nck.jpg" }
+            ],
+            wholesome: [
+                { name: "Wholesome Dog Success", url: "https://i.imgflip.com/2z1q2.jpg" },
+                { name: "Positive Vibes Cat", url: "https://i.imgflip.com/4t0m5.jpg" },
+                { name: "You Got This Dog", url: "https://i.imgflip.com/2zhx.jpg" },
+                { name: "Cute Seal Approval", url: "https://i.imgflip.com/4hr1a.jpg" },
+                { name: "Happy Otter", url: "https://i.imgflip.com/5zq0w.jpg" }
+            ],
+            gaming: [
+                { name: "Sweaty Gamer", url: "https://i.imgflip.com/4hr1af.jpg" }, // Placeholder; popular sweaty tryhard
+                { name: "Gamer Rage", url: "https://i.imgflip.com/1g2r1.jpg" },
+                { name: "Press F to Pay Respects", url: "https://i.imgflip.com/1jwhk.jpg" },
+                { name: "It's Free Real Estate", url: "https://i.imgflip.com/2dta5.jpg" }, // Gaming context often
+                { name: "To Be Continued (Joystick)", url: "https://i.imgflip.com/2z1q2.jpg" }
+            ]
+        };
 
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         let currentImg = new Image();
+        let currentCategory = 'classics';
 
-        // Load templates
-        const templatesDiv = document.getElementById('templates');
-        templates.forEach((temp, index) => {
-            const img = document.createElement('img');
-            img.src = temp.url;
-            img.alt = temp.name;
-            img.classList.add('template-img');
-            img.onclick = () => selectTemplate(temp.url, img);
-            templatesDiv.appendChild(img);
-            if (index === 0) selectTemplate(temp.url, img); // Default first
-        });
+        function loadCategory(cat) {
+            const templatesDiv = document.getElementById('templates');
+            templatesDiv.innerHTML = '';
+            categories[cat].forEach(temp => {
+                const wrapper = document.createElement('div');
+                const img = document.createElement('img');
+                img.src = temp.url;
+                img.alt = temp.name;
+                img.classList.add('template-img');
+                img.onclick = () => selectTemplate(temp.url, img);
+                const label = document.createElement('p');
+                label.textContent = temp.name;
+                label.style.fontSize = '12px';
+                wrapper.appendChild(img);
+                wrapper.appendChild(label);
+                templatesDiv.appendChild(wrapper);
+            });
+            // Select first by default
+            if (categories[cat].length > 0) {
+                selectTemplate(categories[cat][0].url, templatesDiv.querySelector('.template-img'));
+            }
+        }
+
+        function switchCategory(cat) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.tab[onclick="switchCategory('${cat}')"]`).classList.add('active');
+            currentCategory = cat;
+            loadCategory(cat);
+        }
 
         function selectTemplate(url, element) {
             document.querySelectorAll('.template-img').forEach(i => i.classList.remove('selected'));
@@ -70,10 +143,9 @@
         }
 
         function drawMeme() {
-            // Resize canvas to image aspect
-            canvas.width = currentImg.width;
-            canvas.height = currentImg.height;
-            ctx.drawImage(currentImg, 0, 0);
+            canvas.width = currentImg.width || 500;
+            canvas.height = currentImg.height || 500;
+            ctx.drawImage(currentImg, 0, 0, canvas.width, canvas.height);
 
             ctx.font = 'bold 40px Impact';
             ctx.fillStyle = 'white';
@@ -101,14 +173,11 @@
             link.click();
         }
 
-        // Initial draw
-        drawMeme();
-
-        // Live update on input
+        // Initial load
+        loadCategory('classics');
         document.getElementById('topText').addEventListener('input', drawMeme);
         document.getElementById('bottomText').addEventListener('input', drawMeme);
 
-        // Service Worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js');
         }
